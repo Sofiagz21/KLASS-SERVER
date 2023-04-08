@@ -9,18 +9,10 @@ const userSchema= new Schema({
    trim:true,
    required:true,
    },
-   secondName:{
-      type:String,
-      trim:true,
-   },
    lastName:{
       type:String,
       trim:true,
       required:true,
-   },
-   secondLastName:{
-      type:String,
-      trim:true,
    },
    email:{
     type:String,
