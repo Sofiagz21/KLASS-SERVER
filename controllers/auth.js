@@ -22,9 +22,7 @@ export const register = async (req, res) => {
     //register
     const user = new User({
       name,
-      secondName,
       lastName,
-      secondLastName,
       email,
       password: hashedPassword,
     }).save();
