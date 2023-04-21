@@ -17,7 +17,8 @@ export const register = async (req, res) => {
     if(userExist)   return res.status(400).send("Ya existe este correo electronico");
     
     // hash password
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password); // Esto transforma la contraseña a encriptacion
+
     
     //register
     const user = new User({
@@ -67,7 +68,13 @@ export const login = async (req, res) => {
     return res.status(400).send('ERROR. Try Again');
   
   }
-
 };
 
-
+export const logout = async ( res,res ) => {
+try {
+  res.clearCookie("token");
+  return res.json ({message: "Signout sucess"}); 
+} catch (err){
+  console.log(err);
+}
+};
