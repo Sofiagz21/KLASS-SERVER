@@ -5,15 +5,20 @@ import express from "express";
 import cors from "cors";
 import fs from "fs";
 import mongoose from "mongoose";
+import csrf from "csurf";
+import cookieParser from "cookie-parser";
 const morgan = require("morgan");
+
 require ("dotenv").config();
 
+const csrfProtection = csrf({ cookie: true });
 //create express app
 const app=express();
 
 //apply middlewars 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 app.use(morgan("dev"));
 require ("dotenv").config
 app.use((req,res,next) => {
@@ -28,6 +33,14 @@ app.use("/api", require(`./routes/${r}`))
 /*app.get("/", (req, res) => {
   res.send('you hit server endpoint')
 });*/
+
+// csrf
+app.use(csrfProtection);
+
+app.get("/api/csrf-token", (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
 
 //port 
 const port= process.env.PORT || 8000;

@@ -1,6 +1,6 @@
 import User from "../models/user";
 import { hashPassword, comparePassword} from "../utils/auth";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
   try{ // codigo que puede manejar errores
@@ -77,4 +77,14 @@ try {
 } catch (err){
   console.log(err);
 }
+};
+
+export const currentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password").exec();
+    console.log("CURRENT_USER", user);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
+  }
 };
