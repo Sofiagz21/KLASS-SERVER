@@ -1,7 +1,8 @@
 import User from "../models/user";
-import { hashPassword, comparePassword} from "../utils/auth";
+import { hashPassword, comparePassword } from "../utils/auth";
 import jwt from "jsonwebtoken";
-import AWS from 'aws-sdk'
+import { nanoid } from "nanoid";
+import AWS from "aws-sdk";
 
 const awsConfig={
   accessKeyId:  process.env.AWS_ACCESS_KEY_ID,
@@ -99,8 +100,61 @@ export const currentUser = async (req, res) => {
   }
 };
 
+export const forgotPassword= async (req,res) =>{
+  try{
+  const {email} = req.body;
+  //console.log(email);
+  const shortCode= nanoid(6).toUpperCase();
+  const user= await User.findOneAndUpdate(
+    {email}, 
+    {passwordResetCode: shortCode}
+  );
+    if(!user) return res.status(400).send("Usuario no encontrado");
+    
+    
+    //  prepare for email
+    const params = {
+        Source: process.env.EMAIL_FROM,
+        Destination: {
+          ToAddresses: [email]
+        },
+        Message:{
+          Body:{
+            Html: {
+              Charset: 'UTF-8',
+              Data: `
+                <html>
+                  <h1 style="color:#BF2315"> Restablecimiento de contraseña</h1>
+                  <p> Utilice este código para restablecer tu contraseña: </p>
+                  <h2 style="color:#BF2315">${shortCode}</h2>
+                  <i>klass.com</i>
+                </html>
+               `,
+            },
+          },
+          Subject: {
+            Charset: "UTF-8",
+            Data: "Recuperar contraseña",
+          },
+        },
+      };
+        
+        const emailSent= SES.sendEmail(params).promise();
+        emailSent.then((data)=>{
+          console.log(data);
+          res.json({ok:true});
+        })
+        .catch(err =>{
+          console.log(err);
+        
+        })
+        
+  }catch(err){
+    console.log(err);
+  }
+}
 
-export const sendTestEmail = async (req, res) => {
+/*export const sendTestEmail = async (req, res) => {
   // console.log("send email using SES");
   // res.json({ ok: true });
   const params = {
@@ -139,3 +193,4 @@ export const sendTestEmail = async (req, res) => {
       console.log(err);
     });
 };
+*/
