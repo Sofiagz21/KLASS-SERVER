@@ -30,7 +30,6 @@ export const register = async (req, res) => {
     // hash password
     const hashedPassword = await hashPassword(password); // Esto transforma la contraseña a encriptacion
 
-    
     //register
     const user = new User({
       name,
@@ -40,15 +39,13 @@ export const register = async (req, res) => {
     }).save();
     
     //console.log("saved user",user);
-
     return res.json({ ok:true });
     
   }catch (err){ // codigo para manejar errores
     console.log(err);
-    return res.status(400).send('ERROR. Try Again');
+    return res.status(400).send('ERROR. Intentalo de nuevo');
   }
 };
-
 
 export const login = async (req, res) => {
   try{
@@ -63,7 +60,6 @@ export const login = async (req, res) => {
     // create signed jwt
     const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {
       expiresIn: "7d",
-      
     });
     // return user and token to client, exclude hashed password
     user.password =undefined;
@@ -76,8 +72,7 @@ export const login = async (req, res) => {
     res.json(user);
   }catch(err){
     console.log(err);
-    return res.status(400).send('ERROR. Try Again');
-  
+    return res.status(400).send('ERROR. Intentalo de nuevo');
   }
 };
 
@@ -92,8 +87,8 @@ try {
 
 export const currentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password").exec();
-    console.log("CURRENT_USER", user);
+    const user = await User.findById(req.auth._id).select("-password").exec();
+   // console.log("CURRENT_USER", user);
     return res.json({ ok: true });
   } catch (err) {
     console.log(err);
@@ -110,8 +105,6 @@ export const forgotPassword= async (req,res) =>{
     {passwordResetCode: shortCode}
   );
     if(!user) return res.status(400).send("Usuario no encontrado");
-    
-    
     //  prepare for email
     const params = {
         Source: process.env.EMAIL_FROM,
@@ -137,8 +130,7 @@ export const forgotPassword= async (req,res) =>{
             Data: "Recuperar contraseña",
           },
         },
-      };
-        
+      }; 
         const emailSent= SES.sendEmail(params).promise();
         emailSent.then((data)=>{
           console.log(data);
@@ -146,9 +138,7 @@ export const forgotPassword= async (req,res) =>{
         })
         .catch(err =>{
           console.log(err);
-        
         })
-        
   }catch(err){
     console.log(err);
   }
@@ -171,9 +161,7 @@ export const resetPassword = async (req,res) =>{
     res.json({ok:true})
   }catch (err){
     console.log(err);
-    return res.status(400).send("Error.Try Again")
+    return res.status(400).send("Error.Intentalo de nuevo")
   
   }
-
-
 }
