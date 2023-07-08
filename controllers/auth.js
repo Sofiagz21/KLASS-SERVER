@@ -3,6 +3,7 @@ import { hashPassword, comparePassword } from "../utils/auth";
 import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 import AWS from "aws-sdk";
+require("aws-sdk/lib/maintenance_mode_message").suppress = true;
 
 const awsConfig={
   accessKeyId:  process.env.AWS_ACCESS_KEY_ID,

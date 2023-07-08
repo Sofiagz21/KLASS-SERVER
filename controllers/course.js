@@ -2,7 +2,7 @@ import { nanoid } from "nanoid";
 import AWS from "aws-sdk";
 import Course from '../models/course'
 import slugify from "slugify";
-import course from "../models/course";
+import {readFileSync} from 'fs' //rs. readFileSync
 
 const awsConfig={
     accessKeyId:  process.env.AWS_ACCESS_KEY_ID,
@@ -106,3 +106,57 @@ export const read = async (req, res) => {
         console.log(err)
     }
 }
+
+
+export const uploadPdf = async (req,res) => {
+    try{
+        const { pdf } = req.files;
+        //console.log(pdf);
+        if (!pdf) return res.status(400).send("No PDF");
+        // pdf params
+        const params = {
+            Bucket: "klass-education-bucket",
+            Key: `${nanoid()}.${pdf.type.split("/")[1]}}`,
+            Body: readFileSync(pdf.path),
+            ACL: "public-read",
+            ContentType: pdf.type,
+        };
+        // upload to S3
+        S3.upload(params, (err, data) => {
+            if(err){
+                console.log(err);
+                res.sendStatus(400);
+            }
+            console.log(data);
+            res.send(data);
+        });
+    }catch(err){
+        console.log(err)
+    
+    }
+}
+
+export const removePdf= async (req, res) => {
+    try {
+      const { Bucket, Key } = req.body;
+      // console.log("VIDEO REMOVE =====> ", req.body);
+  
+      // video params
+      const params = {
+        Bucket,
+        Key,
+      };
+  
+      // upload to s3
+      S3.deleteObject(params, (err, data) => {
+        if (err) {
+          console.log(err);
+          res.sendStatus(400);
+        }
+        console.log(data);
+        res.send({ ok: true });
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };

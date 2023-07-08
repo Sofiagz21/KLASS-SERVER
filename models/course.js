@@ -20,6 +20,7 @@ const lessonSchema = new mongoose.Schema(
       minlength: 200,
     },
     video_link: {},
+    content_pdf: {},
     free_preview: {
       type: Boolean,
       default: false,
