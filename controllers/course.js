@@ -3,6 +3,7 @@ import AWS from "aws-sdk";
 import Course from '../models/course'
 import slugify from "slugify";
 import {readFileSync} from 'fs' //rs. readFileSync
+import { error } from "console";
 
 const awsConfig={
     accessKeyId:  process.env.AWS_ACCESS_KEY_ID,
@@ -110,6 +111,12 @@ export const read = async (req, res) => {
 
 export const uploadPdf = async (req,res) => {
     try{
+        /*console.log('req.user._id', req.user._id);
+        console.log('req.params.instructorId',req.params.instructorId);
+        return;*/
+        if(req.user._id != req.params.instructorId){
+        return res.status(400).send("No esta autorizado");
+        }
         const { pdf } = req.files;
         //console.log(pdf);
         if (!pdf) return res.status(400).send("No PDF");
@@ -138,9 +145,14 @@ export const uploadPdf = async (req,res) => {
 
 export const removePdf= async (req, res) => {
     try {
+
+    if(req.user._id != req.params.instructorId){
+        return res.status(400).send("No esta autorizado");
+    }
+
       const { Bucket, Key } = req.body;
       // console.log("VIDEO REMOVE =====> ", req.body);
-  
+
       // video params
       const params = {
         Bucket,
@@ -160,3 +172,98 @@ export const removePdf= async (req, res) => {
       console.log(err);
     }
   };
+
+  export const addLesson = async (req, res) => {
+    try{
+    const{ slug, instructorId} = req.params;
+    const{ title, content, content_pdf} = req.body;
+    if(req.user._id != instructorId){
+        return res.status(400).send("No esta autorizado");
+    }
+    const updated = await Course.findOneAndUpdate(
+        {slug},
+        {
+        $push: {lessons:{title, content, content_pdf , slug: slugify (title)}},
+        },
+        {new:true}
+    ).populate("instructor","_id name").exec();
+    res.json(updated);
+    } catch (err) {
+        console.log("error", error)
+        return res.status (400).send("Leccion no añadida")
+    }
+  };
+
+  export const update=async (req,res) =>  {
+   try{
+   const {slug} = req.params;
+   //console.log(slug)
+   const course = await Course.findOne ({slug}).exec;
+   //console.log("CURSO ENCONTRADO", course)
+   if(req.user._id != course.instructor){
+    return res.status(400).send("No autorizado");
+   }
+
+   const updated= await Course.findOneAndUpdate({slug}, req.body, {
+   new:true
+   }).exec();
+
+   res.json(updated);
+
+   } catch (err){
+
+    console.log(err);
+
+    return res.status(400).send(err.message);
+   }
+};
+
+export const removeLesson= async (req,res)=>{
+const {slug, lessonId}=req.params;
+const course= await Course.findOne ({slug}).exec();
+if(req.user._id != course.instructor){
+  return res.status(400).send("No autorizado");
+};
+
+const deletedCourse= await Course.findByIdAndUpdate (course._id,{
+    $pull:{lessons:{_id:lessonId}},
+}).exec();
+
+res.json({ok:true})
+
+
+};
+
+export const updateLesson= async (req, res)=>{
+    try{
+        //console.log("Leccion actualizada")
+
+        const {slug} = req.params;
+
+        const {_id, title,content,video,free_preview} = req.body;
+    
+        const course= await Course.findOne({slug}).select("instructor").exec();
+    
+        if(course.instructor._id != req.user._id){
+            return res.status(400).send("No autorizado");
+        };
+    
+        const updated= await Course.updateOne(
+        {"lessons._id": _id},
+        {
+        $set:{
+            "lessons.$.title":title,
+            "lessons.$.content":content,
+            "lessons.$.video":video,
+            "lessons.$.free_preview":free_preview,
+        }
+        },
+        {new:true}
+        ).exec;
+        console.log("updated", updated)
+        res.json({ok:true});
+    }catch(err){
+        console.log(err);
+        return res.status(400).sen("Leccion cargada fallida")
+    }
+}
